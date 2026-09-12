@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CafePresence — Premium content for your cafe</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+body{background:#f9f7f4;color:#1a1a1a;padding:2rem 1rem}
+.app{max-width:620px;margin:0 auto}
+h1{font-size:22px;font-weight:600;margin-bottom:4px}
+.sub{font-size:14px;color:#888;margin-bottom:1.5rem}
+.card{background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+label{font-size:12px;color:#666;display:block;margin-bottom:5px}
+input,select,textarea{width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;outline:none;font-family:inherit}
+input:focus,select:focus,textarea:focus{border-color:#555}
+textarea{min-height:72px;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.full{margin-bottom:12px}
+.btn{width:100%;padding:11px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer;margin-top:4px}
+.btn:hover{background:#333}
+.btn:disabled{opacity:0.4;cursor:not-allowed}
+.err{font-size:13px;color:#c0392b;margin-top:6px;display:none}
+.loading{text-align:center;padding:2rem;color:#888;display:none}
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid #ddd;border-top-color:#1a1a1a;border-radius:50%;animation:spin 0.7s linear infinite;margin-right:8px;vertical-align:-3px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.results{display:none}
+.out-card{background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:1.25rem;margin-bottom:12px}
+.out-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.out-title{font-size:13px;font-weight:500;color:#666}
+.copy{font-size:12px;color:#2563eb;background:none;border:1px solid #bfdbfe;border-radius:6px;padding:3px 10px;cursor:pointer}
+.copy:hover{background:#eff6ff}
+.out-body{font-size:14px;line-height:1.7;white-space:pre-wrap;color:#1a1a1a}
+.hashtags{margin-top:8px;font-size:13px;color:#2563eb}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:8px}
+.cal-day{background:#f9f7f4;border-radius:8px;padding:8px 4px;text-align:center}
+.cal-day-name{font-size:11px;font-weight:600;margin-bottom:4px}
+.cal-day-idea{font-size:10px;color:#666;line-height:1.4}
+.reset{font-size:13px;color:#666;background:none;border:1px solid #ddd;border-radius:6px;padding:4px 12px;cursor:pointer;margin-bottom:1rem}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>CafePresence</h1>
+  <p class="sub">Premium social content for your cafe — in 60 seconds</p>
+
+  <div class="card" id="formCard">
+    <div class="row">
+      <div><label>Cafe name</label><input id="cafeName" placeholder="The Daily Grind" oninput="clearErr()"></div>
+      <div><label>Location</label><input id="cafeLocation" placeholder="Austin, TX"></div>
+    </div>
+    <div class="row">
+      <div><label>Vibe / style</label>
+        <select id="cafeVibe">
+          <option value="cozy and rustic">Cozy and rustic</option>
+          <option value="modern and minimalist">Modern and minimalist</option>
+          <option value="bohemian and artsy">Bohemian and artsy</option>
+          <option value="industrial chic">Industrial chic</option>
+          <option value="warm and community-focused">Warm and community-focused</option>
+        </select>
+      </div>
+      <div><label>Specialty</label><input id="cafeSpecialty" placeholder="Specialty coffee, vegan pastries"></div>
+    </div>
+    <div class="full">
+      <label>Today's special or highlight</label>
+      <textarea id="todaySpecial" placeholder="Lavender oat latte + almond croissant combo, weekend live jazz at 4pm"></textarea>
+    </div>
+    <div id="formErr" class="err">Please fill in the cafe name and today's special.</div>
+    <button class="btn" id="genBtn" onclick="generate()">Generate content</button>
+  </div>
+
+  <div class="loading" id="loadingEl"><span class="spinner"></span>Writing your content...</div>
+
+  <div class="results" id="resultsEl">
+    <button class="reset" onclick="reset()">&#8592; Start over</button>
+    <div class="out-card">
+      <div class="out-header">
+        <div class="out-title">Instagram caption</div>
+        <button class="copy" onclick="copyText('igCaption', this)">Copy</button>
+      </div>
+      <div class="out-body" id="igCaption"></div>
+      <div class="hashtags" id="igHashtags"></div>
+    </div>
+    <div class="out-card">
+      <div class="out-header">
+        <div class="out-title">WhatsApp / story status</div>
+        <button class="copy" onclick="copyText('waStatus', this)">Copy</button>
+      </div>
+      <div class="out-body" id="waStatus"></div>
+    </div>
+    <div class="out-card">
+      <div class="out-header">
+        <div class="out-title">Google Business post</div>
+        <button class="copy" onclick="copyText('googlePost', this)">Copy</button>
+      </div>
+      <div class="out-body" id="googlePost"></div>
+    </div>
+    <div class="out-card">
+      <div class="out-header"><div class="out-title">7-day content calendar</div></div>
+      <div class="cal" id="calGrid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function clearErr(){document.getElementById('formErr').style.display='none'}
+
+async function generate(){
+  const name=document.getElementById('cafeName').value.trim();
+  const special=document.getElementById('todaySpecial').value.trim();
+  if(!name||!special){document.getElementById('formErr').style.display='block';return}
+  document.getElementById('genBtn').disabled=true;
+  document.getElementById('formCard').style.display='none';
+  document.getElementById('loadingEl').style.display='block';
+
+  try{
+    const res=await fetch('/api/generate',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        cafeName:name,
+        cafeLocation:document.getElementById('cafeLocation').value.trim(),
+        cafeVibe:document.getElementById('cafeVibe').value,
+        cafeSpecialty:document.getElementById('cafeSpecialty').value.trim(),
+        todaySpecial:special
+      })
+    });
+    const json=await res.json();
+    document.getElementById('igCaption').textContent=json.igCaption;
+    document.getElementById('igHashtags').textContent=json.igHashtags;
+    document.getElementById('waStatus').textContent=json.waStatus;
+    document.getElementById('googlePost').textContent=json.googlePost;
+    const grid=document.getElementById('calGrid');
+    grid.innerHTML='';
+    (json.calDays||[]).forEach(d=>{
+      const div=document.createElement('div');
+      div.className='cal-day';
+      div.innerHTML=`<div class="cal-day-name">${d.day}</div><div class="cal-day-idea">${d.idea}</div>`;
+      grid.appendChild(div);
+    });
+    document.getElementById('loadingEl').style.display='none';
+    document.getElementById('resultsEl').style.display='block';
+  }catch(e){
+    document.getElementById('loadingEl').style.display='none';
+    document.getElementById('formCard').style.display='block';
+    document.getElementById('genBtn').disabled=false;
+    const err=document.getElementById('formErr');
+    err.textContent='Something went wrong. Try again.';
+    err.style.display='block';
+  }
+}
+
+function copyText(id,btn){
+  const text=id==='igCaption'
+    ?document.getElementById(id).textContent+'\n\n'+document.getElementById('igHashtags').textContent
+    :document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text);
+  btn.textContent='Copied!';
+  setTimeout(()=>btn.textContent='Copy',1500);
+}
+
+function reset(){
+  document.getElementById('resultsEl').style.display='none';
+  document.getElementById('formCard').style.display='block';
+  document.getElementById('genBtn').disabled=false;
+  document.getElementById('todaySpecial').value='';
+}
+</script>
+</body>
+</html>
